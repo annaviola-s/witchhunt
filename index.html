@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Witch Hunt: Conceal or Live Your Truth</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    .meters {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      gap: 40px;
+      font-size: 18px;
+    }
+    .card {
+      margin-bottom: 20px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+    .quote {
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+    .scenario {
+      margin-bottom: 20px;
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #007BFF;
+      color: #fff;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    #nextBtn {
+      display: none;
+      margin: 0 auto;
+      margin-top: 10px;
+    }
+    #gameOver {
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Witch Hunt: Conceal or Live Your Truth</h1>
+    <div class="meters">
+      <div>Suspicion: <span id="suspicion">0</span></div>
+      <div>Witch Power: <span id="witchPower">5</span></div>
+    </div>
+    <div class="card" id="card">
+      <div class="quote" id="quote">Quote will appear here...</div>
+      <div class="scenario" id="scenario">Scenario details will appear here...</div>
+      <div class="buttons">
+        <button id="concealBtn">🌑 Conceal Your Witchhood</button>
+        <button id="truthBtn">🔥 Live Your Truth</button>
+      </div>
+    </div>
+    <button id="nextBtn">Next</button>
+    <div id="gameOver">
+      <h2>Game Over!</h2>
+      <p id="gameOverMessage"></p>
+      <p>Your final score:</p>
+      <p>Suspicion: <span id="finalSuspicion"></span></p>
+      <p>Witch Power: <span id="finalWitchPower"></span></p>
+      <button onclick="location.reload();">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    // All historical cards from your educational material
+    const witchHuntScenariosData = [
+      {
+        quote: "She was also the loose, promiscuous woman — the prostitute or adulteress, and generally, the woman who exercised her sexuality outside the bonds of marriage and procreation.",
+        scenario: "You carry on an affair outside of marriage, and the community begins to whisper that your promiscuity is a sign of witchcraft."
+      },
+      {
+        quote: "Thus, in the witchcraft trials, 'ill repute' was evidence of guilt.",
+        scenario: "Villagers already speak poorly of you—your sharp tongue and independence have earned you a bad name. When misfortune strikes, your bad reputation alone makes you a prime suspect for witchcraft."
+      },
+      {
+        quote: "The witch was also the rebel woman who talked back, argued, swore, and did not cry under torture.",
+        scenario: "You openly argue with a town official, refusing to hold your tongue or show fear. Your defiance marks you as a rebellious woman, and people start wondering if you’re in league with dark forces."
+      },
+      {
+        quote: "'Rebel' here ... describes the female personality that had developed ... when women had been in the forefront of the heretical movements, often organizing in female associations.",
+        scenario: "You secretly meet with a group of women to discuss forbidden religious ideas. Your leadership in this heretical circle makes local authorities suspicious that you are a dangerous rebel—maybe even a witch."
+      },
+      {
+        quote: "Descriptions of witches remind us of women as they were represented in medieval morality plays and fabliaux: ready to take initiatives, as aggressive and lusty as men, wearing male clothes, proudly riding on their husbands' backs, holding a whip.",
+        scenario: "You defy gender norms by wearing men’s breeches and openly taking charge in your household, even chastising your husband in public. Such unfeminine assertiveness leads townsfolk to joke nervously that you bewitched your husband—only a witch, they say, could dominate a man so boldly."
+      },
+      {
+        quote: "Certainly, among those indicted there were women suspected of specific crimes: one accused of poisoning her husband, another of causing the death of her employer, another again of having prostituted her daughter.",
+        scenario: "Your abusive husband dies suddenly after you served him supper. Though it was illness, whispers spread that you must have poisoned him with witchcraft to gain your freedom."
+      },
+      {
+        quote: "It was not only the deviant woman, but the woman as such, particularly the woman of the lower classes, that was put on trial... 'We must,' Bodin declared, 'spread terror among some by punishing many.'",
+        scenario: "You are a simple peasant woman living quietly in your village. When a witch panic sweeps the region, authorities begin arresting not just the odd or outcast, but ordinary women like you to set an example. The message is clear: by punishing many women, they hope to terrify all the rest into obedience."
+      },
+      {
+        quote: "Women walked, for the first time, into the courtrooms of Europe, in their own name as legal adults, under charge of being witches and child murderers.",
+        scenario: "After a newborn in the village dies under mysterious circumstances, you—a local midwife—are hauled into court on charges of witchcraft and child murder. For the first time in your life you’re allowed to speak in court, but only because you stand accused of a capital crime."
+      },
+      {
+        quote: "The suspicion under which midwives labored in this period... stemmed more from the authorities' fears of infanticide than from any concern with the midwives' alleged medical incompetence.",
+        scenario: "A baby dies during a difficult birth you attended. Instead of viewing it as a tragedy, the town authorities eye you—the midwife—with suspicion. They care less about your skills and more about their fear that you might have deliberately harmed the infant through witchcraft."
+      },
+      {
+        quote: "With the marginalization of the midwife, the process began by which women lost the control they had exercised over procreation, and were reduced to a passive role in child delivery.",
+        scenario: "You are a respected village midwife, but a male physician sent by the authorities now supervises every birth. If you protest his dangerous methods or try to assert your old authority, you risk being denounced as a witch. Day by day, you are pushed into silence, losing control over the birthing process you once led."
+      },
+      {
+        quote: "Midwives had to become spies for the state... They were expected to report all new births, discover the fathers of children born out of wedlock, and examine the women suspected of having secretly given birth.",
+        scenario: "As the village midwife, the authorities demand you inform on any unwed mothers and even inspect women for signs of secret childbirth. If you refuse to spy on other women, you risk falling under suspicion yourself for abetting witchcraft or infanticide."
+      },
+      {
+        quote: "Neighbors were supposed to spy on women and report all relevant sexual details: if a woman received a man when her husband was away, or if she entered a house with a man and shut the door behind her.",
+        scenario: "Your husband is away and one evening a male cousin stops by to deliver news. Nosy neighbors see a man enter your home and the door shut behind him. By morning, gossip spreads that you entertained a lover in secret—a scandal that could easily have you marked as a witch in these watchful times."
+      },
+      {
+        quote: "Women were punished if they did not make enough of an effort during child-delivery or showed little enthusiasm for their offspring.",
+        scenario: "Exhausted from a brutal childbirth, you cannot even lift your head to look at the baby. The midwife notices your lack of enthusiasm. Soon you are reported for being an 'unnatural' mother—whispers start that perhaps you wanted the child to die, a suspicion that could see you tried as a witch who kills her own offspring."
+      },
+      {
+        quote: "A further difference between the persecutions of the heretics and that of the witches is that in the latter the charges of sexual perversion and infanticide had a central role, being accompanied by the virtual demonization of contraceptive practices.",
+        scenario: "You brew an herbal tea to avoid another pregnancy during a famine. When a local priest learns of your potion, he denounces it as a devil’s work. Suddenly you’re not just a prudent woman—you’re accused of perversion against nature and marked as a witch for daring to control conception."
+      },
+      {
+        quote: "(Witches) destroy the offspring of women... They hinder men from generating and women from conceiving.",
+        scenario: "A wealthy couple in town struggles to conceive a child. Instead of blaming illness or chance, they point at you—an old midwife living next door—accusing you of casting spells to make them barren. They claim your very presence 'hinders women from conceiving,' a wicked curse only a witch could inflict."
+      },
+      {
+        quote: "By the 17th century witches were accused of conspiring to destroy the generative power of humans and animals, of procuring abortions, and of belonging to an infanticidal sect devoted to killing children or offering them to the devil.",
+        scenario: "A plague of miscarriages and livestock dying at birth strikes your region. Panicked villagers accuse you and a few other women who gather at the old grove of being a coven behind it all. They say you meet at night to blight wombs and cattle, and belong to a secret sect that murders infants for the Devil."
+      },
+      {
+        quote: "In the popular imagination... the witch came to be associated with a lecherous old woman, hostile to new life, who fed upon infant flesh or used children’s bodies to make her magical potions.",
+        scenario: "You are an elderly midwife who never had children of your own. When a baby dies of sickness, fearful villagers imagine you creeping in at night to steal the corpse for your potions. They call you a hag who hates babies, spreading lurid tales that you must be a witch who feeds on infant flesh."
+      },
+      {
+        quote: "In the charge that witches sacrificed children to the devil... we can read... the fear of the propertied classes with regard to their subordinates, particularly low-class women who, as servants, beggars or healers, had many opportunities to enter their employers’ houses and cause them harm.",
+        scenario: "You work as a maid in a lord’s manor where a young child falls mysteriously ill. The master’s family, distrustful of your low status and knowledge of herbs, quietly fears you might have bewitched the child. They dare not accuse you openly yet, but you notice the way they watch you now—as if a servant like you might poison their food or curse their baby at any opportunity."
+      },
+      {
+        quote: "She was, in fact, very popular; everyone would go to her to be cured, to have his or her fortune told, to find missing objects or to buy love potions. But she did not escape persecution.",
+        scenario: "Villagers come to you for healing and charms, and your home is always full of people seeking help. Yet when a witch-hunter arrives in town, your fame as a healer paints a target on your back—surely, he insists, no mere woman could cure ailments or tell fortunes without the Devil’s aid. Despite your good deeds, you find yourself accused of witchcraft."
+      },
+      {
+        quote: "the Counter-Reformation took a strong position against popular healers, fearing their power and deep roots in the culture of their communities.",
+        scenario: "You inherited herbal knowledge passed down for generations, and people trust you more than the distant doctor. But now Church authorities have taken notice of your influence. They begin to denounce your healing gatherings as devilish and whisper that your remedies usurp God’s will. Your deep bond with the community has ironically made you a target for a witch purge by those in power."
+      },
+      {
+        quote: "the fate of the 'good witches' was sealed in 1604 when a statute... established the death penalty for anyone who invoked spirits and magic, even if they caused no visible harm.",
+        scenario: "A new law is passed: any use of magic, even harmless healing or charms, is punishable by death. You’ve always used gentle folk magic to help your neighbors, but now even a benevolent spell could send you to the stake. The law makes no distinction between malicious sorcery and benign craft—either you give up your “good” magic or risk execution as a witch."
+      },
+      {
+        quote: "With the persecution of the folk healer, women were expropriated from a patrimony of empirical knowledge... its loss paving the way for a new form of enclosure. This was the rise of professional medicine.",
+        scenario: "Your grandmother taught you the healing properties of every herb in the woods. Now a licensed male doctor has arrived and demands you stop treating the sick. If you continue your traditional healing, you could be arrested as a witch; if you quit, generations of women’s medical knowledge will be lost as doctors take over. The community’s health—and your freedom—hang in the balance."
+      },
+      {
+        quote: "Even when they were not expert sorcerers... they were the ones who were called to mark animals when they fell sick, heal their neighbors, help them find lost or stolen objects, give them amulets or love potions, help them forecast the future.",
+        scenario: "Villagers constantly seek your help—one day it’s a charm to find a lost cow, another it’s a love potion for a lonely heart. You oblige with your folk remedies and small incantations, becoming indispensable to the community. But as talk of witch-hunts grows, those same grateful neighbors start to eye you with unease, wondering if your everyday magic might hide something more sinister."
+      },
+      {
+        quote: "Though the witch-hunt targeted a broad variety of female practices, it was above all in this capacity — as sorcerers, healers, performers of incantations and divinations — that women were persecuted.",
+        scenario: "You make a living telling fortunes and performing harmless spells at village fairs. When witch-hunters arrive, they single you out immediately. Never mind that your charms are benign—what they see is a woman practicing incantations, exactly the kind of behavior they are primed to punish. Your role as a public sorceress has put you first in line for persecution."
+      },
+      {
+        quote: "The 'diabolical crimes' of the witches... appear to us as nothing more than the class struggle played out at the village level: the 'evil eye,' the curse of the beggar to whom an alms has been refused, the default on the payment of rent, the demand for public assistance.",
+        scenario: "Your landlord raises the rent and you cannot pay. When his cattle fall ill soon after, he accuses you of giving him the evil eye in revenge. To the rich, every misfortune that befalls them after they wrong a poor woman seems like proof of witchcraft. In truth, all you did was beg for mercy and resist starvation—but now you’re labeled vengeful and dangerous."
+      },
+      {
+        quote: "She had picked a basket of pears in the neighbor’s field without permission... since then no pears would grow in the field.",
+        scenario: "Hunger drives you to sneak into a neighbor’s orchard and take a few pears. When you’re caught and scolded, you throw the fruit down in anger. The next season, the pear tree yields nothing. The neighbor swears that your rage left a witch’s curse on his orchard, blaming you for the barren tree."
+      },
+      {
+        quote: "Later William Goodwin’s servant denied her yeast, whereupon his brewing stand dried up.",
+        scenario: "You ask a neighbor for a bit of yeast to bake bread, but he rudely refuses. Days later, his own batch of beer inexplicably fails to ferment. He recalls your request and, in his guilt and anger, spreads word that you hexed his brew as payback—a petty curse, he claims, that only a witch would cast."
+      },
+      {
+        quote: "She was struck by a bailiff who had caught her taking wood from the master's ground; the bailiff went mad.",
+        scenario: "Unable to afford firewood, you gather a few fallen branches from the lord’s forest. The estate bailiff catches you and strikes you in anger. Soon after, that same bailiff falls into a delirious fever and loses his wits. The household servants whisper that he must have angered a witch—after all, he hit you, a poor woman, and now he’s gone mad as if cursed."
+      },
+      {
+        quote: "A neighbor refused her a horse; all his horses died.",
+        scenario: "When your horse goes lame, you humbly ask a well-off neighbor to borrow one of his for a day. He refuses and sends you away humiliated. A month later, a sudden illness kills all the horses in his stable. Everyone remembers how he spurned you. Now townsfolk mutter that he brought down a witch’s curse by denying you aid, and they wonder if you orchestrated the plague out of spite."
+      },
+      {
+        quote: "Another paid her less for a pair of shoes than she had asked; later he died.",
+        scenario: "You sell handmade shoes in the market. A customer haggles you down to a price that barely covers your costs. Angry but helpless, you complete the sale. A week later, that same customer collapses and dies unexpectedly. His family recalls your displeasure and starts whispering that your witch’s curse struck him down for underpaying you."
+      },
+      {
+        quote: "A gentleman told his servant to refuse her buttermilk; after which they were unable to make butter or cheese.",
+        scenario: "You beg a wealthy manor for a cup of buttermilk, but the master orders his servants to chase you off without charity. The next week, none of the milk on that estate will churn into butter or cheese, no matter what they try. The household is alarmed and points at you as the cause—they believe the beggar woman they turned away has hexed their dairy in revenge."
+      },
+      {
+        quote: "Mother Waterhouse... was a 'very poor woman,' described as begging for some cake or butter and 'falling out' with many of her neighbors.",
+        scenario: "Everyone calls you Old Mother, and they all know you often beg from your neighbors to survive. When someone refuses you a crust of bread or a bit of butter, you don’t hide your disappointment or sharp tongue. Soon people begin to gossip that those who anger you tend to suffer mishaps. Your habit of quarreling when denied charity has villagers suspecting you cast the evil eye like a witch whenever you leave empty-handed."
+      },
+      {
+        quote: "Mother Devell, Mother Margaret and Mother Dutton... were also poor widows... and all of them went around begging and presumably taking revenge when denied.",
+        scenario: "You and a small group of destitute widows often go door to door together, begging for alms. When townsfolk turn you away with nothing, misfortunes seem to befall them soon after—at least that’s what the rumors say. Before long, the town’s imagination links you widows together as a witches’ coven, assuming you collectively curse anyone who refuses to help you."
+      },
+      {
+        quote: "On being refused some old yeast, Elizabeth Francis... cursed a neighbor who later developed a great pain in her head.",
+        scenario: "You ask your neighbor for a bit of old yeast to bake bread, but she rudely refuses. Frustrated, you mutter a few angry words as you walk away. The next day that neighbor is struck with a sudden, severe headache. She immediately accuses you of bewitching her in retaliation for not giving you the yeast, turning a simple grumble into proof of a curse."
+      },
+      {
+        quote: "Mother Staunton suspiciously murmured, going away, when denied yeast by a neighbor.",
+        scenario: "Yet again you are refused a small request—this time a bit of yeast—and you can’t help but murmur under your breath as you leave in defeat. Unfortunately, a watchful neighbor hears you and later claims your quiet, unintelligible murmuring sounded like casting a spell. In a village on edge, even your sighs and mumbled frustrations are seen as the mutterings of a witch setting a curse."
+      },
+      {
+        quote: "Those who dared to work out of the home, in a public space and for the market, were portrayed as sexually aggressive shrews or even as 'whores' and 'witches'.",
+        scenario: "You open a stall in the marketplace to sell cloth that you weave, stepping into a trade normally run by men. The male merchants are furious at your independence. They start calling you a shameless “wench” and hint that only a witch would neglect her proper place at home. Your attempt to earn honest coin has them painting you as a foul-mouthed whore and likely a witch, all to drive you out of business."
+      },
+      {
+        quote: "Women were accused of being unreasonable, vain, wild, wasteful. Especially blamed was the female tongue, seen as an instrument of insubordination.",
+        scenario: "You speak up frequently at town meetings, voicing your opinions and grievances. The men dismiss you as wild and headstrong. They say your sharp tongue sows discord—that your words themselves have a dangerous power. Under their breath they compare your scolding to casting spells, as if a woman who speaks her mind freely must be using witchcraft to challenge the natural order."
+      },
+      {
+        quote: "The main female villain was the disobedient wife, who, together with the 'scold', the 'witch', and the 'whore' was the favorite target of dramatists, popular writers, and moralists.",
+        scenario: "You refuse to obey your husband’s every command and often argue with him in public. This earns you notoriety as a disobedient wife. Moralists in town lump you in with all the worst female figures—the nagging scold, the promiscuous whore, and the wicked witch. In plays and gossip, you’ve become the villain of the age, and it won’t be long before someone decides to punish you for it."
+      },
+      {
+        quote: "In the Europe of the Age of Reason, women accused of being scolds were led like dogs and paraded in the streets; prostitutes were whipped, or caged and subjected to fake drownings, while capital punishment was established for women convicted of adultery.",
+        scenario: "After you publicly berate your husband for coming home drunk, the magistrate threatens to fit you with a 'scold’s bridle'—an iron muzzle—to silence your nagging tongue. You’ve seen other outspoken wives paraded through town in such torture devices, and you know women have been whipped or even executed for lesser offenses. Under these terrifying new laws, any woman who steps out of line—be she labeled a scold, whore, or witch—faces brutal punishment."
+      },
+      {
+        quote: "In the heretical sects... women had the right to administer the sacraments, preach, baptize and even acquire sacerdotal orders.",
+        scenario: "You are a member of a heretical sect that treats women as spiritual equals to men. When you lead a prayer meeting and even baptize a sick child, the village priest is outraged. He accuses you of blasphemy—claiming that a woman performing sacred rites is by definition in league with Satan. Your right to preach, granted by your sect, now marks you as a witch in the eyes of the Church."
+      },
+      {
+        quote: "Women also formed their own communities... A typical case was that of the Beguines... laywomen... who lived together... outside of male control and without submitting to monastic rule.",
+        scenario: "You join a Beguine house—a community of women living together independently, without husbands or fathers. Your little women-run commune soon draws suspicion from the townsmen and clergy. They can’t imagine women living peacefully without male control unless it’s something untoward. Whispers spread that your beguinage must hide sinful, perhaps magical, activities. In the eyes of authorities, a house full of self-sufficient women looks dangerously like a coven of witches defying the proper order."
+      },
+      {
+        quote: "In the 11th century... women gave life to the heretical movements... female heretics came from the most humble ranks of the serfs, and they constituted a true women's movement.",
+        scenario: "You are a serf woman who preaches a radical new doctrine that God speaks to common folk directly. Many peasant women rally around you, forming an underground movement seeking social and spiritual equality. The feudal lords and churchmen are alarmed by this uprising of “lowly” women. They respond by branding you and your followers as heretics and witches, determined to crush this nascent women’s movement by fire and sword."
+      },
+      {
+        quote: "By the beginning of the 15th century, the main target of the persecution against heretics became the witch.",
+        scenario: "Not long ago you were chastised as a heretic for questioning a priest’s teachings. Now, as the Inquisition’s focus shifts, you find yourself called a 'witch' instead. The authorities have decided that a woman with unorthodox religious views must be in league with the Devil. Yesterday you were merely a spiritual dissenter; today you are the embodiment of evil in their eyes, marked for the stake."
+      },
+      {
+        quote: "By the 18th century... the witch was becoming an African practitioner of Obeah, a ritual that the planters feared and demonized as an incitement to rebellion.",
+        scenario: "On a Caribbean sugar plantation, you secretly practice Obeah to heal and protect fellow enslaved people. The plantation owners live in terror of slave revolts, and they fixate on your spiritual influence. To them, your rituals are not just heathen but a direct threat—voodoo sorcery that could stir rebellion. They begin to demonize you as a witch, blaming Obeah for every act of resistance and using that as a pretext to brutally punish anyone who seeks your help."
+      },
+      {
+        quote: "They were old and lived alone. Their poverty stands out in the confessions.",
+        scenario: "You are an elderly widow living by yourself at the edge of the village, surviving on whatever little you have. When witch-hunters drag you in for questioning, they list no real crimes—only the facts of your life: you are old, you live alone, you are poor. In their minds, these are telltale marks of a witch. Simply by being a destitute, solitary woman, you find yourself accused of consorting with the Devil."
+      },
+      {
+        quote: "German women were forbidden to live alone or with other women and, in the case of the poor, even with their own families, since it was expected that they would not be properly controlled.",
+        scenario: "After your husband’s death, the local authorities inform you that you cannot continue living by yourself. As a widow with little money, they insist you move in under a male relative’s roof so you can be 'properly controlled.' You realize that if you insist on maintaining your independence—living alone or just with your young children—you could be branded unruly and suspect. In fact, some whisper that a poor woman not under a man’s supervision is surely up to no good, perhaps even witchcraft."
+      },
+      {
+        quote: "Heretics were accused of... orgiastic rituals, night flights and child sacrifices... Corresponding to this, the figure of the heretic increasingly became that of a woman...",
+        scenario: "You attend secret prayer meetings that the Church disapproves of. To discredit your group, fantastical accusations emerge: officials claim you all fly at night to debauched sabbats and sacrifice infants in satanic rites. These grotesque lies morph your image from mere 'heretic' to 'witch'. As these stories spread, any woman involved in your sect — including you — is no longer seen as a misguided believer but as a baby-killing witch, ripe for persecution."
+      },
+      {
+        quote: "Bodin explained that women were more prone to witchcraft because of their 'insatiable lust'; Martin Luther and humanist writers stressed women's moral and mental weakness... But all singled out women as evil beings.",
+        scenario: "Local preachers declare from the pulpit that women are easily ensnared by Satan because of our supposed lust and weakness. As a young woman who enjoys dancing and has strong opinions, you notice their eyes on you when they speak. Their sermons have primed the community to view any hint of female desire or assertiveness as evidence of wickedness. Now, because you don’t fit the mold of the meek woman, neighbors regard you with suspicion—perhaps you’re evil at heart, a natural witch, just as the learned men say."
+      },
+      {
+        quote: "In the 1840s... a wave of witch-burnings occurred in Western India... These killings occurred in the context of the social crisis caused... by the colonial authorities' attack on the communities living in the forests (among whom women had a far higher degree of power) and the colonial devaluation of female power, resulting in the decline of the worship of female goddesses.",
+        scenario: "You are a village wise woman in colonial India, one of the last devotees of the old forest goddess. After the British conquer the region, they disrupt your community and outlaw traditional practices. Famine and social upheaval follow. Grieving and desperate villagers, encouraged by colonial disdain for the 'old ways,' begin to blame the local women healers for their woes. In a tragic turn, they accuse you of witchcraft—claiming that the gods punish the village because of your forbidden powers—and a witch-burning mob comes for you amid the chaos of colonial rule."
+      },
+      {
+        quote: "Statistics show that infanticide was punished even more frequently than witchcraft... Nuremberg executed fourteen women for that crime between 1578 and 1615, but only one for witchcraft.",
+        scenario: "A young unmarried maidservant gives birth in secret and, in despair, smothers her newborn to avoid scandal and starvation. When discovered, she is dragged to execution not just as a murderer but as a moral monster. In this society obsessed with increasing population, a mother who rejects her maternal duty is seen as more wicked than any witch. Her tragic act is met with immediate, harsh justice—serving as a warning that a woman’s failure to produce and nurture life will be punished even more severely than sorcery."
+      }
+    ];
+    
+    // Game state variables
+    let currentIndex = 0;
+    let suspicionScore = 0;
+    let witchPowerScore = 5;
+    
+    // Element references
+    const quoteEl = document.getElementById("quote");
+    const scenarioEl = document.getElementById("scenario");
+    const suspicionEl = document.getElementById("suspicion");
+    const witchPowerEl = document.getElementById("witchPower");
+    const concealBtn = document.getElementById("concealBtn");
+    const truthBtn = document.getElementById("truthBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const cardEl = document.getElementById("card");
+    const gameOverEl = document.getElementById("gameOver");
+    const finalSuspicionEl = document.getElementById("finalSuspicion");
+    const finalWitchPowerEl = document.getElementById("finalWitchPower");
+    const gameOverMessageEl = document.getElementById("gameOverMessage");
+    
+    // Load the current scenario card
+    function loadScenario() {
+      if (currentIndex >= witchHuntScenariosData.length) {
+        endGame("You've survived all the trials. Your journey continues...");
+        return;
+      }
+      
+      const currentCard = witchHuntScenariosData[currentIndex];
+      quoteEl.innerHTML = `<strong>Quote:</strong> "${currentCard.quote}"`;
+      scenarioEl.textContent = currentCard.scenario;
+      
+      // Reset buttons for new card
+      concealBtn.disabled = false;
+      truthBtn.disabled = false;
+      nextBtn.style.display = "none";
+    }
+    
+    // End game function, with a custom message
+    function endGame(message) {
+      cardEl.style.display = "none";
+      nextBtn.style.display = "none";
+      gameOverEl.style.display = "block";
+      finalSuspicionEl.textContent = suspicionScore;
+      finalWitchPowerEl.textContent = witchPowerScore;
+      gameOverMessageEl.textContent = message;
+    }
+    
+    // Handle a player's choice based on the new mechanism
+    function handleChoice(choiceKey) {
+      if (choiceKey === "Conceal") {
+        witchPowerScore -= 1;
+      } else if (choiceKey === "Live Truth") {
+        suspicionScore += 1;
+      }
+      
+      suspicionEl.textContent = suspicionScore;
+      witchPowerEl.textContent = witchPowerScore;
+      
+      // Disable buttons until next card
+      concealBtn.disabled = true;
+      truthBtn.disabled = true;
+      
+      // Check game over conditions
+      if (witchPowerScore <= 0) {
+        endGame("You lose yourself. Your power has faded into nothingness.");
+        return;
+      }
+      if (suspicionScore >= 5) {
+        endGame("You are persecuted and killed. The flames of suspicion consume you.");
+        return;
+      }
+      
+      nextBtn.style.display = "block";
+    }
+    
+    // Event listeners for the choice buttons
+    concealBtn.addEventListener("click", () => handleChoice("Conceal"));
+    truthBtn.addEventListener("click", () => handleChoice("Live Truth"));
+    nextBtn.addEventListener("click", () => {
+      currentIndex++;
+      loadScenario();
+    });
+    
+    // Initialize the game
+    loadScenario();
+  </script>
+</body>
+</html>
